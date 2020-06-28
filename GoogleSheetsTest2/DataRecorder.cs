@@ -7,15 +7,16 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace GoogleSheetsTest2
 {
-    partial class DataRecorder
+    public partial class DataRecorder
     {
-        private static UserCredential GetSheetCredential(string ClientSecret)
+        private UserCredential GetSheetCredential(string ClientSecret)
         {
 
             using (var stream =
@@ -31,6 +32,19 @@ namespace GoogleSheetsTest2
                 Console.WriteLine("Credential file saved to: " + credPath);
             }
         }
+
+
+        private SheetsService GetService(UserCredential credential)
+        {
+            return new SheetsService(new BaseClientService.Initializer()
+            {
+                HttpClientInitializer = credential,
+                ApplicationName = AppName,
+            });
+        }
+
+
+
 
 
 

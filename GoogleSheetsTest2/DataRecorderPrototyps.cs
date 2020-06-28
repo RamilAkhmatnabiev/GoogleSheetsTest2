@@ -13,26 +13,86 @@ using System.Threading.Tasks;
 
 namespace GoogleSheetsTest2
 {
-    partial class DataRecorder
+    public partial class DataRecorder
     {
         private string ClientSecret;
         //private string ClientSecret = "client_secret.json";
-        private static readonly string[] ScopeSheets = { SheetsService.Scope.Spreadsheets }; // права на использование
-        //private static readonly string AppName = "ProgramForPostgressTest"; // имя приложения
-        private readonly string AppName; // имя приложения
+        private readonly string[] ScopeSheets = { SheetsService.Scope.Spreadsheets }; // права на использование
+        private readonly string AppName = "ProgramForPostgressTest"; // имя приложения
+
+        //private string AppName; // имя приложения
         //private static readonly string SpreadSheetsId = "18bjPMlVNxm7yQ0Rg1weso9_db6Rg6NrfHgpFj2S-u7s"; // айди таблицы
-        private readonly string SpreadSheetsId; // айди таблицы
+        private string spreadSheetsId; // айди таблицы
         private string Range; // диапазон получаемых ячеек строки
 
-        public DataRecorder(string appName = "ProgramForPostgressTest", string spreadSheetsId = "18bjPMlVNxm7yQ0Rg1weso9_db6Rg6NrfHgpFj2S-u7s", string range = "'Sheet1' A1:F")
+        private UserCredential credential;// нужен для хранения credential
+        private SheetsService service;  
+        
+        
+
+
+
+        public DataRecorder(string spreadSheetsId = "18bjPMlVNxm7yQ0Rg1weso9_db6Rg6NrfHgpFj2S-u7s", string range = "'Sheet1' A1:F")
         {
-            this.AppName = appName;
-            this.SpreadSheetsId = spreadSheetsId;
+            this.spreadSheetsId = spreadSheetsId;
             this.Range = range;
             ClientSecret = "client_secret.json";
-            var credential = GetSheetCredential(ClientSecret);
+
+            credential = GetSheetCredential(ClientSecret); // формируем credential на базе файла client secret
+
+            service = GetService(credential); // подключаемся к googlt  с credential  и получаем service
 
 
         }
+
+        public void FillSpreadSheets(string[,] data)
+        {
+            List<Request> requests = new List<Request>(); // создаем массив запросов
+
+            for (int i = 0; i < data.GetLength(0); i++)
+            {
+                List<CellData> values = new List<CellData>(); //создаем массив значний
+
+                for (int j = 0; j < data.GetLength(1); j++)
+                {
+                    values.Add(new CellData
+                    {
+                        UserEnteredValue = new ExtendedValue
+                        {
+                            StringValue = data[i, j]
+                        }
+                    }
+                    );
+                }
+
+                requests.Add(
+                    new Request
+                    {
+                        UpdateCells = new UpdateCellsRequest
+                        {
+                            Start = new GridCoordinate
+                            {
+                                SheetId = 0,
+                                RowIndex = i,
+                                ColumnIndex = 0
+                            },
+                            Rows = new List<RowData> { new RowData { Values = values } },
+                            Fields = "userEnteredValue"
+                        }
+                    });
+
+            }
+
+            BatchUpdateSpreadsheetRequest busr = new BatchUpdateSpreadsheetRequest
+            {
+                Requests = requests
+            };
+            //service.Spreadsheets.BatchUpdate(busr, spreadSheetsId).Execute();
+            service.Spreadsheets.BatchUpdate(busr, spreadSheetsId).Execute();
+
+        }
+        
+
+
     }
 }
