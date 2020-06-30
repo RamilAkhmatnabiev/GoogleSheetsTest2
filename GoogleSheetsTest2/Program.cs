@@ -21,21 +21,25 @@ namespace GoogleSheetsTest2
         //private static readonly string AppName = "ProgramForPostgressTest"; // имя приложения
         //private static readonly string SpreadSheetsId = "18bjPMlVNxm7yQ0Rg1weso9_db6Rg6NrfHgpFj2S-u7s"; // айди таблицы
         //private const string Range = "'Sheet1' A1:F"; // диапазон получаемых ячеек строки
-        private static string[,] Data = new string[,]
-        {
-            {"11","12","14"},
-            {"11","12","14"},
-            {"11","12","14"}
-        };
+        
 
 
 
         static void Main(string[] args)
         {
-            DataRecorder a = new DataRecorder();
-            a.FillSpreadSheets(Data);
-            
+            List<string[]> listOfServerInfo;
+            ServerManipulator sm = new ServerManipulator();
+            sm.DoConnection();
+            listOfServerInfo =  sm.GetDatabaseInfoForGoogleSheets();
 
+            DataRecorder dataRecorder = new DataRecorder();
+            dataRecorder.FillSpreadSheets(listOfServerInfo);
+
+
+            sm.DoDesconnection();
+
+
+            
         }
 
         

@@ -27,16 +27,16 @@ namespace GoogleSheetsTest2
             command = new NpgsqlCommand("SELECT t1.datname AS db_name,pg_size_pretty(pg_database_size(t1.datname)) AS db_size FROM pg_database t1; ", conn);
         }
 
-        public List<Tuple<string, string>> GetDatabaseInfoForGoogleSheets()
+        public List<string[]> GetDatabaseInfoForGoogleSheets()
         {
-            List<Tuple<string, string>> info = new List<Tuple<string, string>>();
+            List<string[]> info = new List<string[]>();
             NpgsqlDataReader dr = command.ExecuteReader();
 
-            Tuple<string, string> currentDatabaseInfo;
+            string[] currentDatabaseInfo;
 
             while (dr.Read())
             {
-                currentDatabaseInfo = new Tuple<string, string>(dr[0].ToString(), dr[1].ToString());
+                currentDatabaseInfo = new string[]{ dr[0].ToString(), dr[1].ToString()};
 
                 info.Add(currentDatabaseInfo);
 

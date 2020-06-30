@@ -45,21 +45,21 @@ namespace GoogleSheetsTest2
 
         }
 
-        public void FillSpreadSheets(string[,] data)
+        public void FillSpreadSheets(List<string[]> info)  //string[,] data
         {
             List<Request> requests = new List<Request>(); // создаем массив запросов
 
-            for (int i = 0; i < data.GetLength(0); i++)
+            for (int i = 0; i < info.Count; i++)
             {
                 List<CellData> values = new List<CellData>(); //создаем массив значний
 
-                for (int j = 0; j < data.GetLength(1); j++)
+                for (int j = 0; j < 2; j++)
                 {
                     values.Add(new CellData
                     {
                         UserEnteredValue = new ExtendedValue
                         {
-                            StringValue = data[i, j]
+                            StringValue = info[i][j]
                         }
                     }
                     );
