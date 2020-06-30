@@ -26,9 +26,9 @@ namespace GoogleSheetsTest2
         private string Range; // диапазон получаемых ячеек строки
 
         private UserCredential credential;// нужен для хранения credential
-        private SheetsService service;  
-        
-        
+        private SheetsService service;  // нужен для хранения service
+
+
 
 
 
