@@ -11,35 +11,90 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Npgsql;
+using System.Configuration;
+using System.Collections.Specialized;
+
+
+
 
 namespace GoogleSheetsTest2
 {
     class Program
     {
-        //private static string ClientSecret = "client_secret.json";
-        //private static readonly string[] ScopeSheets = { SheetsService.Scope.Spreadsheets }; // права на использование
-        //private static readonly string AppName = "ProgramForPostgressTest"; // имя приложения
-        //private static readonly string SpreadSheetsId = "18bjPMlVNxm7yQ0Rg1weso9_db6Rg6NrfHgpFj2S-u7s"; // айди таблицы
-        //private const string Range = "'Sheet1' A1:F"; // диапазон получаемых ячеек строки
-        
 
 
 
         static void Main(string[] args)
         {
-            List<string[]> listOfServerInfo;
-            ServerManipulator sm = new ServerManipulator();
-            sm.DoConnection();
-            listOfServerInfo =  sm.GetDatabaseInfoForGoogleSheets();
-
-            DataRecorder dataRecorder = new DataRecorder();
-            dataRecorder.FillSpreadSheets(listOfServerInfo);
-
-
-            sm.DoDesconnection();
-
-
+            //NameValueCollection all = ConfigurationManager.AppSettings;
+            //foreach (string s in all.AllKeys) Console.WriteLine("Key: " + s + " Value: " + all.Get(s)); Console.ReadLine();
             
+            List<string[]> listOfServerInfo;
+            NameValueCollection serversFromConfMngr = ConfigurationManager.AppSettings;
+            ServerManipulator sm;
+            DataRecorder dataRecorder;
+            string spreadSheetsId = "18bjPMlVNxm7yQ0Rg1weso9_db6Rg6NrfHgpFj2S-u7s"; // вставить сюда айди таблицы
+
+
+
+
+
+
+
+            for (int i = 0; i < serversFromConfMngr.AllKeys.Length; i++)
+            {
+                sm = new ServerManipulator(ConfigurationManager.AppSettings.Get(i));
+
+                sm.DoConnection();
+                listOfServerInfo = sm.GetDatabaseInfoForGoogleSheets();
+
+                dataRecorder = new DataRecorder(i, spreadSheetsId);
+
+                dataRecorder.FillSpreadSheets(listOfServerInfo);
+
+
+                //string apset = ConfigurationManager.AppSettings.Get(0);
+
+                sm.DoDesconnection();
+            }
+
+
+            //foreach (string s in serversFromConfMngr)
+            //{
+            //    sm = new ServerManipulator(s);
+            //    sm.DoConnection();
+            //    listOfServerInfo = sm.GetDatabaseInfoForGoogleSheets();
+
+            //    dataRecorder = new DataRecorder(currentServerNumber);
+
+            //    dataRecorder.FillSpreadSheets(listOfServerInfo);
+
+
+            //    //string apset = ConfigurationManager.AppSettings.Get(0);
+
+            //    sm.DoDesconnection();
+            //    currentServerNumber++;
+            //}
+
+
+
+
+
+            //ServerManipulator sm = new ServerManipulator();
+            //sm.DoConnection();
+            //listOfServerInfo =  sm.GetDatabaseInfoForGoogleSheets();
+
+            //DataRecorder dataRecorder = new DataRecorder();
+            //dataRecorder.FillSpreadSheets(listOfServerInfo);
+
+
+            //string apset = ConfigurationManager.AppSettings.Get(0);
+            //
+            //sm.DoDesconnection();
+
+
+
+
         }
 
         

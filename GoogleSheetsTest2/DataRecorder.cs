@@ -15,7 +15,7 @@ namespace GoogleSheetsTest2
 {
     public class DataRecorder
     {
-        private string ClientSecret;
+        private string ClientSecret = "client_secret.json";
         //private string ClientSecret = "client_secret.json";
         private readonly string[] ScopeSheets = { SheetsService.Scope.Spreadsheets }; // права на использование
         private readonly string AppName = "ProgramForPostgressTest"; // имя приложения
@@ -23,20 +23,22 @@ namespace GoogleSheetsTest2
         //private string AppName; // имя приложения
         //private static readonly string SpreadSheetsId = "18bjPMlVNxm7yQ0Rg1weso9_db6Rg6NrfHgpFj2S-u7s"; // айди таблицы
         private string spreadSheetsId; // айди таблицы
-        private string Range; // диапазон получаемых ячеек строки
+        private string Range = "'Sheet1' B2:F"; // диапазон получаемых ячеек строки
+        private int currentServerNumber; //нужен для создания нового листа, если серверов несколько
 
         private UserCredential credential;// нужен для хранения credential
         private SheetsService service;  // нужен для хранения service
 
 
 
+        //18bjPMlVNxm7yQ0Rg1weso9_db6Rg6NrfHgpFj2S-u7s
+        //10dFGbsi3Av-sqViDzCkxRaqE9TPFTozbwaZN_sQdhEo
 
-
-        public DataRecorder(string spreadSheetsId = "18bjPMlVNxm7yQ0Rg1weso9_db6Rg6NrfHgpFj2S-u7s", string range = "'Sheet1' A1:F")
+        public DataRecorder(int currentServerNumber, string spreadSheetsId = "18bjPMlVNxm7yQ0Rg1weso9_db6Rg6NrfHgpFj2S-u7s")
         {
             this.spreadSheetsId = spreadSheetsId;
-            this.Range = range;
-            ClientSecret = "client_secret.json";
+
+            this.currentServerNumber = currentServerNumber;
 
             credential = GetSheetCredential(ClientSecret); // формируем credential на базе файла client secret
 
@@ -48,12 +50,13 @@ namespace GoogleSheetsTest2
         public void FillSpreadSheets(List<string[]> info)  
         {
             List<Request> requests = new List<Request>(); // создаем массив запросов
+            
 
             for (int i = 0; i < info.Count; i++)
             {
                 List<CellData> values = new List<CellData>(); //создаем массив значний
 
-                for (int j = 0; j < 2; j++)
+                for (int j = 0; j < info[i].Length; j++)
                 {
                     values.Add(new CellData
                     {
@@ -63,8 +66,16 @@ namespace GoogleSheetsTest2
                         }
                     }
                     );
+                    
                 }
-
+                values.Add(new CellData
+                {
+                    UserEnteredValue = new ExtendedValue
+                    {
+                        StringValue = DateTime.Now.ToString()
+                    }
+                }
+                    );
                 requests.Add(
                     new Request
                     {
@@ -72,9 +83,9 @@ namespace GoogleSheetsTest2
                         {
                             Start = new GridCoordinate
                             {
-                                SheetId = 0,
-                                RowIndex = i,
-                                ColumnIndex = 0
+                                SheetId = currentServerNumber,
+                                RowIndex = i +1,
+                                ColumnIndex = 1
                             },
                             Rows = new List<RowData> { new RowData { Values = values } },
                             Fields = "userEnteredValue"
