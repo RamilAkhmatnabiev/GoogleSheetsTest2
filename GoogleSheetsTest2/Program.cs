@@ -39,7 +39,7 @@ namespace GoogleSheetsTest2
 
 
             Console.WriteLine("Set the time between the refreshes in ms:");
-            timeOfRefresh = int.Parse(Console.ReadLine());
+            //timeOfRefresh = int.Parse(Console.ReadLine());
 
             if (countOfServers > 0)
             {

@@ -22,14 +22,14 @@ namespace GoogleSheetsTest2
         private readonly string AppName = "ProgramForPostgressTest"; // имя приложения
         private string spreadSheetsId; // айди таблицы
         private int count = 0; // счетчик для sheet title name
-       
+
         //public bool isFirstLoop { get; set; } = true;  // нужен для того, чтобы не создавать листы при следующих прогонах программы
         private List<Tuple<int, string>> allSheets = new List<Tuple<int, string>>(); // массив с парами знчений id и name всех листов таблицы
 
         private UserCredential credential;// нужен для хранения credential
         private SheetsService service;  // нужен для хранения service
 
-        
+
 
 
 
@@ -43,11 +43,15 @@ namespace GoogleSheetsTest2
             credential = GetSheetCredential(ClientSecret); // формируем credential на базе файла client secret
             service = GetService(credential); // подключаемся к google  с credential  и получаем service
 
+            DeleteAllSheets(); //очищаем таблицу
+            RenameFirstSheet(); // 
+
             for (int i = 0; i < serversCount; i++)
             {
-               
-                    CreateNewSheet();
+
+                CreateNewSheet();
             }
+            DeleteFirstSheet();
 
         }
 
@@ -60,7 +64,7 @@ namespace GoogleSheetsTest2
             {
                 List<CellData> values = new List<CellData>(); //создаем массив значний
 
-                for (int j = 0; j < info[i].Length; j++)
+                for (int j = 0; j < info[i].Length; j++) // добавляем каждое значение массива из листа в value, которое в далее передается в request
                 {
                     values.Add(new CellData
                     {
@@ -89,7 +93,7 @@ namespace GoogleSheetsTest2
                             {
                                 SheetId = sheetId,
                                 RowIndex = i + 1,
-                                ColumnIndex = 1
+                                ColumnIndex = 0
                             },
                             Rows = new List<RowData> { new RowData { Values = values } },
                             Fields = "userEnteredValue"
@@ -106,10 +110,6 @@ namespace GoogleSheetsTest2
 
         }
 
-        public int GetThisIndexSheetId(int index)
-        {
-            return allSheets[index].Item1;
-        }
 
         private UserCredential GetSheetCredential(string ClientSecret)
         {
@@ -163,13 +163,17 @@ namespace GoogleSheetsTest2
             id = GetLastListId();
             allSheets.Add(new Tuple<int, string>(id, name));
             count++;
+
+            CreateTitleStringInSheet(id);
+
+
         }
 
-        private void DeleteSheet(int deletedSheetId)
+        private void DeleteSheet(int sheetId) // долго работает в массиве
         {
 
 
-            var deleteSheetRequest = new Request { DeleteSheet = new DeleteSheetRequest { SheetId = deletedSheetId } };
+            var deleteSheetRequest = new Request { DeleteSheet = new DeleteSheetRequest { SheetId = sheetId } };
 
             List<Request> requests = new List<Request> { deleteSheetRequest };
             BatchUpdateSpreadsheetRequest batchUpdateRequest = new BatchUpdateSpreadsheetRequest();
@@ -177,7 +181,88 @@ namespace GoogleSheetsTest2
             service.Spreadsheets.BatchUpdate(batchUpdateRequest, spreadSheetsId).Execute();
         }
 
-        private Tuple<string, int> GetListIdAndTitle(int index)
+        private void DeleteAllSheets()
+        {
+            Spreadsheet spreadsheet;
+
+            List<int> ids = new List<int>();
+            List<Request> deleteRequests = new List<Request>();
+            int count = 0;
+
+
+
+            spreadsheet = service.Spreadsheets.Get(spreadSheetsId).Execute();
+
+
+
+            foreach (Sheet sheet in spreadsheet.Sheets)
+            {
+                if (count == 0)
+                {
+                    count++;
+                    continue;
+                }
+                deleteRequests.Add(new Request { DeleteSheet = new DeleteSheetRequest { SheetId = sheet.Properties.SheetId } });
+                count++;
+                
+            }
+            if (count > 1)
+            {
+
+
+                BatchUpdateSpreadsheetRequest batchUpdateRequest = new BatchUpdateSpreadsheetRequest();
+                batchUpdateRequest.Requests = deleteRequests;
+                service.Spreadsheets.BatchUpdate(batchUpdateRequest, spreadSheetsId).Execute();
+            }
+        }
+
+        private void DeleteFirstSheet()
+        {
+            Spreadsheet spreadsheet;
+            List<Request> deleteRequests = new List<Request>();
+            int deletedSheetId;
+            spreadsheet = service.Spreadsheets.Get(spreadSheetsId).Execute();
+            foreach (Sheet sheet in spreadsheet.Sheets)
+            {
+                
+                deletedSheetId = (int)sheet.Properties.SheetId;
+                DeleteSheet(deletedSheetId);
+                break;
+            }
+
+        }
+        private void RenameFirstSheet()
+        {
+            int id = new int();
+            id = 333;
+            //var request = new Request { UpdateSpreadsheetProperties = new UpdateSpreadsheetPropertiesRequest {Properties = new SpreadsheetProperties { Title = "Del" }} }; //{ Properties = new SheetProperties { Title = "Delet" } } };
+            var request = new Request()
+            {
+                UpdateSheetProperties = new UpdateSheetPropertiesRequest
+                {
+                    Properties = new SheetProperties()
+                    {
+                        Title = "Deleted",
+                        SheetId = GetThisIndexSheetId(0)
+                     
+
+                    },
+                    Fields = "Title"
+                }
+
+
+            };
+            List<Request> requests = new List<Request>();
+            requests.Add(request);
+
+            BatchUpdateSpreadsheetRequest busr = new BatchUpdateSpreadsheetRequest
+            {
+                Requests = requests
+            };
+            service.Spreadsheets.BatchUpdate(busr, spreadSheetsId).Execute();
+        }
+
+        private Tuple<string, int> GetListIdAndTitle(int index) 
         {
             Spreadsheet spreadsheet;
             int loopCount = -1;
@@ -212,10 +297,76 @@ namespace GoogleSheetsTest2
             return null;
 
         }
-        private int GetLastListId()
+        private int GetLastListId()// создает первую заголовочную строку 
         {
             var spreadsheet = service.Spreadsheets.Get(spreadSheetsId).Execute();
             return (int)spreadsheet.Sheets[spreadsheet.Sheets.Count - 1].Properties.SheetId;
+        }
+
+        public int GetThisIndexSheetId(int index)
+        {
+
+            int loop = -1;
+            int id = -1;
+            var spreadsheet = service.Spreadsheets.Get(spreadSheetsId).Execute();
+            foreach (Sheet sheet in spreadsheet.Sheets)
+            {
+                loop++;
+                if (loop != index)
+                {
+                    continue;
+                }
+                id = (int)sheet.Properties.SheetId;
+
+            }
+
+            return id;
+        }
+
+        private void CreateTitleStringInSheet(int sheetId)
+        {
+            string[] data = { "Сервер", "База данных", "Размер", "Время обновления" };
+            List<Request> requests = new List<Request>(); // создаем массив запросов
+
+            List<CellData> values = new List<CellData>(); //создаем массив значний
+
+            for (int i = 0; i < data.Length; i++) // добавляем каждое значение массива из листа в value, которое в далее передается в request
+            {
+                values.Add(new CellData
+                {
+                    UserEnteredValue = new ExtendedValue
+                    {
+                        StringValue = data[i]
+                    }
+                }
+                );
+
+            }
+
+            requests.Add(
+                new Request
+                {
+                    UpdateCells = new UpdateCellsRequest
+                    {
+                        Start = new GridCoordinate
+                        {
+                            SheetId = sheetId,
+                            RowIndex = 0,
+                            ColumnIndex = 0
+                        },
+                        Rows = new List<RowData> { new RowData { Values = values } },
+                        Fields = "userEnteredValue"
+                    }
+                });
+
+
+
+            BatchUpdateSpreadsheetRequest busr = new BatchUpdateSpreadsheetRequest
+            {
+                Requests = requests
+            };
+            service.Spreadsheets.BatchUpdate(busr, spreadSheetsId).Execute();
+
         }
     }
 }
