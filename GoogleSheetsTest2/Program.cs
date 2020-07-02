@@ -48,10 +48,9 @@ namespace GoogleSheetsTest2
                 sm.DoConnection();
                 listOfServerInfo = sm.GetDatabaseInfoForGoogleSheets();
 
-                dataRecorder = new DataRecorder(i, spreadSheetsId);
+                dataRecorder = new DataRecorder(i, serversFromConfMngr.AllKeys.Length, spreadSheetsId);
 
                 dataRecorder.FillSpreadSheets(listOfServerInfo);
-
 
                 //string apset = ConfigurationManager.AppSettings.Get(0);
 
