@@ -39,7 +39,7 @@ namespace GoogleSheetsTest2
 
 
             Console.WriteLine("Set the time between the refreshes in ms:");
-            //timeOfRefresh = int.Parse(Console.ReadLine());
+            timeOfRefresh = int.Parse(Console.ReadLine());
 
             if (countOfServers > 0)
             {
@@ -51,10 +51,15 @@ namespace GoogleSheetsTest2
                     {
                         sm = new ServerManipulator(ConfigurationManager.AppSettings.Get(i));
 
+                        string keyFromConfig  = ConfigurationManager.AppSettings.AllKeys[i];
+
+                        double discSize = double.Parse(keyFromConfig);
+                        //double 
+
                         sm.DoConnection();
                         listOfServerInfo = sm.GetDatabaseInfoForGoogleSheets();
 
-                        dataRecorder.FillSpreadSheets(listOfServerInfo, dataRecorder.GetThisIndexSheetId(i));
+                        dataRecorder.FillSpreadSheets(listOfServerInfo, dataRecorder.GetThisIndexSheetId(i), i, discSize);
 
                         sm.DoDesconnection();
                     }

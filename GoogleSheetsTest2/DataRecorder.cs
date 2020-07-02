@@ -15,7 +15,7 @@ namespace GoogleSheetsTest2
 {
     public class DataRecorder
     {
-        //реализовать удаление листов с совпадающим именем сервева
+
 
         private string ClientSecret = "client_secret.json";
         private readonly string[] ScopeSheets = { SheetsService.Scope.Spreadsheets }; // права на использование
@@ -55,9 +55,10 @@ namespace GoogleSheetsTest2
 
         }
 
-        public void FillSpreadSheets(List<string[]> info, int sheetId)  //заполняет таблицу данными
+        public void FillSpreadSheets(List<string[]> info, int sheetId, int index, double discSize)  //заполняет таблицу данными
         {
             List<Request> requests = new List<Request>(); // создаем массив запросов
+            string Date;
 
 
             for (int i = 0; i < info.Count; i++)
@@ -80,7 +81,8 @@ namespace GoogleSheetsTest2
                 {
                     UserEnteredValue = new ExtendedValue
                     {
-                        StringValue = DateTime.Now.ToString()
+                        //StringValue = DateTime.Now.ToString()
+                        StringValue = (DateTime.Today.ToString()).Replace("0:00:00", "")
                     }
                 }
                     );
@@ -107,6 +109,8 @@ namespace GoogleSheetsTest2
                 Requests = requests
             };
             service.Spreadsheets.BatchUpdate(busr, spreadSheetsId).Execute();
+
+            CreateBottomStringInSheet(sheetId, index, discSize);
 
         }
 
@@ -204,7 +208,7 @@ namespace GoogleSheetsTest2
                 }
                 deleteRequests.Add(new Request { DeleteSheet = new DeleteSheetRequest { SheetId = sheet.Properties.SheetId } });
                 count++;
-                
+
             }
             if (count > 1)
             {
@@ -224,7 +228,7 @@ namespace GoogleSheetsTest2
             spreadsheet = service.Spreadsheets.Get(spreadSheetsId).Execute();
             foreach (Sheet sheet in spreadsheet.Sheets)
             {
-                
+
                 deletedSheetId = (int)sheet.Properties.SheetId;
                 DeleteSheet(deletedSheetId);
                 break;
@@ -244,7 +248,7 @@ namespace GoogleSheetsTest2
                     {
                         Title = "Deleted",
                         SheetId = GetThisIndexSheetId(0)
-                     
+
 
                     },
                     Fields = "Title"
@@ -262,7 +266,7 @@ namespace GoogleSheetsTest2
             service.Spreadsheets.BatchUpdate(busr, spreadSheetsId).Execute();
         }
 
-        private Tuple<string, int> GetListIdAndTitle(int index) 
+        private Tuple<string, int> GetListIdAndTitle(int index)
         {
             Spreadsheet spreadsheet;
             int loopCount = -1;
@@ -352,6 +356,66 @@ namespace GoogleSheetsTest2
                         {
                             SheetId = sheetId,
                             RowIndex = 0,
+                            ColumnIndex = 0
+                        },
+                        Rows = new List<RowData> { new RowData { Values = values } },
+                        Fields = "userEnteredValue"
+                    }
+                });
+
+
+
+            BatchUpdateSpreadsheetRequest busr = new BatchUpdateSpreadsheetRequest
+            {
+                Requests = requests
+            };
+            service.Spreadsheets.BatchUpdate(busr, spreadSheetsId).Execute();
+
+        }
+
+        private void CreateBottomStringInSheet(int sheetId, int index, double discSize)
+        {
+
+
+            string discSizeField = "=";
+            discSizeField += discSize.ToString();
+            for (int i = 0; i < allSheets.Count; i++)
+            {
+                discSizeField += "-C" + (i + 2).ToString();
+            }
+
+            string timeOfRefresh = DateTime.Today.ToString();
+            timeOfRefresh = timeOfRefresh.Replace("0:00:00", " ");
+
+            string[] data = { allSheets[index].Item2, "Свободно", discSizeField, timeOfRefresh };
+
+
+            List<Request> requests = new List<Request>(); // создаем массив запросов
+
+            List<CellData> values = new List<CellData>(); //создаем массив значний
+
+            for (int i = 0; i < data.Length; i++) // добавляем каждое значение массива из листа в value, которое в далее передается в request
+            {
+                values.Add(new CellData
+                {
+                    UserEnteredValue = new ExtendedValue
+                    {
+                        StringValue = data[i]
+                    }
+                }
+                );
+
+            }
+
+            requests.Add(
+                new Request
+                {
+                    UpdateCells = new UpdateCellsRequest
+                    {
+                        Start = new GridCoordinate
+                        {
+                            SheetId = sheetId,
+                            RowIndex = allSheets.Count + 2,
                             ColumnIndex = 0
                         },
                         Rows = new List<RowData> { new RowData { Values = values } },
