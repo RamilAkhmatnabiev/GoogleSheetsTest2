@@ -26,93 +26,47 @@ namespace GoogleSheetsTest2
 
         static void Main(string[] args)
         {
-            //NameValueCollection all = ConfigurationManager.AppSettings;
-            //foreach (string s in all.AllKeys) Console.WriteLine("Key: " + s + " Value: " + all.Get(s)); Console.ReadLine();
-            
             List<string[]> listOfServerInfo;
             NameValueCollection serversFromConfMngr = ConfigurationManager.AppSettings;
             ServerManipulator sm;
             DataRecorder dataRecorder;
             string spreadSheetsId = "18bjPMlVNxm7yQ0Rg1weso9_db6Rg6NrfHgpFj2S-u7s"; // вставить сюда айди таблицы
+            int countOfServers = serversFromConfMngr.AllKeys.Length;
+            int refreshesCount = 0;
+            int timeOfRefresh = 1000;
 
 
 
 
+            Console.WriteLine("Set the time between the refreshes in ms:");
+            timeOfRefresh = int.Parse(Console.ReadLine());
 
-
-
-            for (int i = 0; i < serversFromConfMngr.AllKeys.Length; i++)
+            if (countOfServers > 0)
             {
-                sm = new ServerManipulator(ConfigurationManager.AppSettings.Get(i));
+                dataRecorder = new DataRecorder(countOfServers, spreadSheetsId);
 
-                sm.DoConnection();
-                listOfServerInfo = sm.GetDatabaseInfoForGoogleSheets();
+                while (true)
+                {
+                    for (int i = 0; i < countOfServers; i++)
+                    {
+                        sm = new ServerManipulator(ConfigurationManager.AppSettings.Get(i));
 
-                dataRecorder = new DataRecorder(i, serversFromConfMngr.AllKeys.Length, spreadSheetsId);
+                        sm.DoConnection();
+                        listOfServerInfo = sm.GetDatabaseInfoForGoogleSheets();
 
-                dataRecorder.FillSpreadSheets(listOfServerInfo);
+                        dataRecorder.FillSpreadSheets(listOfServerInfo, dataRecorder.GetThisIndexSheetId(i));
 
-                //string apset = ConfigurationManager.AppSettings.Get(0);
+                        sm.DoDesconnection();
+                    }
 
-                sm.DoDesconnection();
+                    System.Threading.Thread.Sleep(timeOfRefresh);
+                    Console.WriteLine("{0}#Refresh the table", refreshesCount);
+                    refreshesCount++;
+                }
+
+
             }
-
-
-            //foreach (string s in serversFromConfMngr)
-            //{
-            //    sm = new ServerManipulator(s);
-            //    sm.DoConnection();
-            //    listOfServerInfo = sm.GetDatabaseInfoForGoogleSheets();
-
-            //    dataRecorder = new DataRecorder(currentServerNumber);
-
-            //    dataRecorder.FillSpreadSheets(listOfServerInfo);
-
-
-            //    //string apset = ConfigurationManager.AppSettings.Get(0);
-
-            //    sm.DoDesconnection();
-            //    currentServerNumber++;
-            //}
-
-
-
-
-
-            //ServerManipulator sm = new ServerManipulator();
-            //sm.DoConnection();
-            //listOfServerInfo =  sm.GetDatabaseInfoForGoogleSheets();
-
-            //DataRecorder dataRecorder = new DataRecorder();
-            //dataRecorder.FillSpreadSheets(listOfServerInfo);
-
-
-            //string apset = ConfigurationManager.AppSettings.Get(0);
-            //
-            //sm.DoDesconnection();
-
-
-
-
         }
-
-        
-
-        
-
-        //private static string GetFirstCell(SheetsService service, string range, string spreadSheetsId)
-        //{
-        //    SpreadsheetsResource.ValuesResource.GetRequest request = service.Spreadsheets.Values.Get(spreadSheetsId, range);
-        //    ValueRange response = request.Execute();
-
-        //    string result = null;
-        //    foreach (var value in response.Values)
-        //    {
-        //        result += " " + value[0];
-        //    }
-        //    return result;
-        //}
-
 
     }
 }

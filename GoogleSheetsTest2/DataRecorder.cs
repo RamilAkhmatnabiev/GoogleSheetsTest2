@@ -15,57 +15,43 @@ namespace GoogleSheetsTest2
 {
     public class DataRecorder
     {
+        //реализовать удаление листов с совпадающим именем сервева
+
         private string ClientSecret = "client_secret.json";
-        //private string ClientSecret = "client_secret.json";
         private readonly string[] ScopeSheets = { SheetsService.Scope.Spreadsheets }; // права на использование
         private readonly string AppName = "ProgramForPostgressTest"; // имя приложения
-
-        //private string AppName; // имя приложения
-        //private static readonly string SpreadSheetsId = "18bjPMlVNxm7yQ0Rg1weso9_db6Rg6NrfHgpFj2S-u7s"; // айди таблицы
         private string spreadSheetsId; // айди таблицы
-        private string Range = "'Sheet1' B2:F"; // диапазон получаемых ячеек строки
-
-        private int serversNumber;
-        private int currentServerNumber; //нужен для создания нового листа, если серверов несколько
-        private static bool isFirstCreate = true;// нужен для проверки условия при удалении первого листа, если подключаемся к таблице впервые
+        private int count = 0; // счетчик для sheet title name
+       
+        //public bool isFirstLoop { get; set; } = true;  // нужен для того, чтобы не создавать листы при следующих прогонах программы
+        private List<Tuple<int, string>> allSheets = new List<Tuple<int, string>>(); // массив с парами знчений id и name всех листов таблицы
 
         private UserCredential credential;// нужен для хранения credential
         private SheetsService service;  // нужен для хранения service
 
+        
 
 
 
         //18bjPMlVNxm7yQ0Rg1weso9_db6Rg6NrfHgpFj2S-u7s
         //10dFGbsi3Av-sqViDzCkxRaqE9TPFTozbwaZN_sQdhEo
 
-        public DataRecorder(int currentServerNumber,int serversCount, string spreadSheetsId = "18bjPMlVNxm7yQ0Rg1weso9_db6Rg6NrfHgpFj2S-u7s")
+        public DataRecorder(int serversCount, string spreadSheetsId = "18bjPMlVNxm7yQ0Rg1weso9_db6Rg6NrfHgpFj2S-u7s")
         {
             this.spreadSheetsId = spreadSheetsId;
 
-            this.currentServerNumber = currentServerNumber;
-
             credential = GetSheetCredential(ClientSecret); // формируем credential на базе файла client secret
-
             service = GetService(credential); // подключаемся к google  с credential  и получаем service
 
-
-            if (isFirstCreate) // в первом подключении удаляем листы по необходимым ID, и создаем их заново (в дальнейшем нужно оптимизировать код убрав эту часть)
+            for (int i = 0; i < serversCount; i++)
             {
-                for (int i = 0; i < serversCount; i++)
-                {
-                   
-                    DeleteSheet(i);
-                    CreateNewSheet(i);
-                }
-                                
-                isFirstCreate = false;
+               
+                    CreateNewSheet();
             }
-
-            
 
         }
 
-        public void FillSpreadSheets(List<string[]> info)  //заполняет таблицу данными
+        public void FillSpreadSheets(List<string[]> info, int sheetId)  //заполняет таблицу данными
         {
             List<Request> requests = new List<Request>(); // создаем массив запросов
 
@@ -101,7 +87,7 @@ namespace GoogleSheetsTest2
                         {
                             Start = new GridCoordinate
                             {
-                                SheetId = currentServerNumber,
+                                SheetId = sheetId,
                                 RowIndex = i + 1,
                                 ColumnIndex = 1
                             },
@@ -116,9 +102,13 @@ namespace GoogleSheetsTest2
             {
                 Requests = requests
             };
-            //service.Spreadsheets.BatchUpdate(busr, spreadSheetsId).Execute();
             service.Spreadsheets.BatchUpdate(busr, spreadSheetsId).Execute();
 
+        }
+
+        public int GetThisIndexSheetId(int index)
+        {
+            return allSheets[index].Item1;
         }
 
         private UserCredential GetSheetCredential(string ClientSecret)
@@ -148,9 +138,10 @@ namespace GoogleSheetsTest2
             });
         }
 
-        private void CreateNewSheet(int currentServerNumber)
+        private void CreateNewSheet()
         {
-            string name = "server" + currentServerNumber.ToString();
+            string name = "server" + (count + 1).ToString();
+            int id;
 
             var addSheetRequest = new Request
             {
@@ -158,19 +149,23 @@ namespace GoogleSheetsTest2
                 {
                     Properties = new SheetProperties
                     {
-                        SheetId = currentServerNumber,
+                        //SheetId = currentServerNumber,
                         Title = name
                     }
                 }
             };
-            
+
             List<Request> requests = new List<Request> { addSheetRequest };
             BatchUpdateSpreadsheetRequest batchUpdateRequest = new BatchUpdateSpreadsheetRequest();
             batchUpdateRequest.Requests = requests;
             service.Spreadsheets.BatchUpdate(batchUpdateRequest, spreadSheetsId).Execute();
+
+            id = GetLastListId();
+            allSheets.Add(new Tuple<int, string>(id, name));
+            count++;
         }
 
-        private void DeleteSheet(int deletedSheetId) 
+        private void DeleteSheet(int deletedSheetId)
         {
 
 
@@ -193,7 +188,7 @@ namespace GoogleSheetsTest2
 
 
             spreadsheet = service.Spreadsheets.Get(spreadSheetsId).Execute();
-            
+
             try
             {
                 foreach (Sheet sheet in spreadsheet.Sheets)
@@ -215,12 +210,12 @@ namespace GoogleSheetsTest2
                 Console.WriteLine("Error in GetListIdAndTitle");
             }
             return null;
-            
+
         }
-        private int GetListId(int index)
+        private int GetLastListId()
         {
             var spreadsheet = service.Spreadsheets.Get(spreadSheetsId).Execute();
-            return (int)spreadsheet.Sheets[1].Properties.SheetId;
+            return (int)spreadsheet.Sheets[spreadsheet.Sheets.Count - 1].Properties.SheetId;
         }
     }
 }
