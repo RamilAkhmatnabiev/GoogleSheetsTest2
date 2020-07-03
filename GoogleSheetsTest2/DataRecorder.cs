@@ -417,9 +417,61 @@ namespace GoogleSheetsTest2
                             SheetId = sheetId,
                             RowIndex = allSheets.Count + 2,
                             ColumnIndex = 0
+
                         },
                         Rows = new List<RowData> { new RowData { Values = values } },
-                        Fields = "userEnteredValue"
+                        Fields = "userEnteredValue",
+
+                    }
+                });
+
+
+
+            BatchUpdateSpreadsheetRequest busr = new BatchUpdateSpreadsheetRequest
+            {
+                Requests = requests
+            };
+            service.Spreadsheets.BatchUpdate(busr, spreadSheetsId).Execute();
+
+            PutFormula(sheetId, 2, discSizeField);
+
+        }
+
+
+        private void PutFormula(int sheetId, int index, string formula)
+        {
+
+
+
+            List<Request> requests = new List<Request>(); // создаем массив запросов
+
+            List<CellData> values = new List<CellData>(); //создаем массив значний
+
+
+            values.Add(new CellData
+            {
+                EffectiveValue = new ExtendedValue { FormulaValue = formula },
+                UserEnteredValue = new ExtendedValue { FormulaValue = formula }
+
+            }
+                );
+
+
+            requests.Add(
+                new Request
+                {
+                    UpdateCells = new UpdateCellsRequest
+                    {
+                        Start = new GridCoordinate
+                        {
+                            SheetId = sheetId,
+                            RowIndex = allSheets.Count + 2,
+                            ColumnIndex = index
+
+                        },
+                        Rows = new List<RowData> { new RowData { Values = values } },
+                        Fields = "userEnteredValue",
+
                     }
                 });
 
@@ -432,5 +484,64 @@ namespace GoogleSheetsTest2
             service.Spreadsheets.BatchUpdate(busr, spreadSheetsId).Execute();
 
         }
+        //private void CreateBottomStringInSheet(int sheetId, int index, double discSize)
+        //{
+
+
+        //    string discSizeField = "=";
+        //    discSizeField += discSize.ToString();
+        //    for (int i = 0; i < allSheets.Count; i++)
+        //    {
+        //        discSizeField += "-C" + (i + 2).ToString();
+        //    }
+
+        //    string timeOfRefresh = DateTime.Today.ToString();
+        //    timeOfRefresh = timeOfRefresh.Replace("0:00:00", " ");
+
+
+
+
+        //    List<Request> requests = new List<Request>(); // создаем массив запросов
+
+        //    List<CellData> values = new List<CellData>(); //создаем массив значний
+
+
+        //    values.Add(new CellData
+        //    {
+        //         EffectiveValue = new ExtendedValue { FormulaValue = discSizeField},
+        //         UserEnteredValue = new ExtendedValue { FormulaValue = discSizeField}
+
+        //    }
+        //    );
+
+
+
+        //    requests.Add(
+        //        new Request
+        //        {
+        //            UpdateCells = new UpdateCellsRequest
+        //            {
+        //                Start = new GridCoordinate
+        //                {
+        //                    SheetId = sheetId,
+        //                    RowIndex = allSheets.Count + 2,
+        //                    ColumnIndex = 0
+
+        //                },
+        //                Rows = new List<RowData> { new RowData { Values = values } },
+        //                Fields = "userEnteredValue"
+
+        //            }
+        //        });
+
+
+
+        //    BatchUpdateSpreadsheetRequest busr = new BatchUpdateSpreadsheetRequest
+        //    {
+        //        Requests = requests
+        //    };
+        //    service.Spreadsheets.BatchUpdate(busr, spreadSheetsId).Execute();
+
+        //}
     }
 }
