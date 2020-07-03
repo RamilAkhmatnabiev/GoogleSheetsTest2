@@ -30,24 +30,27 @@ namespace GoogleSheetsTest2
             NameValueCollection serversFromConfMngr = ConfigurationManager.AppSettings;
             ServerManipulator sm;
             DataRecorder dataRecorder;
-            string spreadSheetsId = "18bjPMlVNxm7yQ0Rg1weso9_db6Rg6NrfHgpFj2S-u7s"; // вставить сюда айди таблицы
+            string spreadSheetsId; //"18bjPMlVNxm7yQ0Rg1weso9_db6Rg6NrfHgpFj2S-u7s"; // вставить сюда айди таблицы
             int countOfServers = serversFromConfMngr.AllKeys.Length;
             int refreshesCount = 0;
             int timeOfRefresh = 1000;
 
+            spreadSheetsId = ConfigurationManager.AppSettings.Get(0);
 
 
 
-            Console.WriteLine("Set the time between the refreshes in ms:");
+
+            Console.Write("Set the time between the refreshes in ms:  ");
             timeOfRefresh = int.Parse(Console.ReadLine());
+            Console.WriteLine("Loading...");
 
-            if (countOfServers > 0)
+            if (countOfServers > 1)
             {
-                dataRecorder = new DataRecorder(countOfServers, spreadSheetsId);
+                dataRecorder = new DataRecorder(countOfServers - 1, spreadSheetsId);
 
                 while (true)
                 {
-                    for (int i = 0; i < countOfServers; i++)
+                    for (int i = 1; i < countOfServers; i++)
                     {
                         sm = new ServerManipulator(ConfigurationManager.AppSettings.Get(i));
 
@@ -59,13 +62,13 @@ namespace GoogleSheetsTest2
                         sm.DoConnection();
                         listOfServerInfo = sm.GetDatabaseInfoForGoogleSheets();
 
-                        dataRecorder.FillSpreadSheets(listOfServerInfo, dataRecorder.GetThisIndexSheetId(i), i, discSize);
+                        dataRecorder.FillSpreadSheets(listOfServerInfo, dataRecorder.GetThisIndexSheetId(i - 1), i - 1, discSize);
 
                         sm.DoDesconnection();
                     }
 
                     System.Threading.Thread.Sleep(timeOfRefresh);
-                    Console.WriteLine("{0}#Refresh the table", refreshesCount);
+                    Console.WriteLine("{0}#  Refresh the table", refreshesCount);
                     refreshesCount++;
                 }
 
