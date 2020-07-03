@@ -17,7 +17,7 @@ namespace GoogleSheetsTest2
     {
 
 
-        private string ClientSecret = "client_secret.json";
+        private string ClientSecret = "client_secret.json"; // файл из гугла с апи
         private readonly string[] ScopeSheets = { SheetsService.Scope.Spreadsheets }; // права на использование
         private readonly string AppName = "ProgramForPostgressTest"; // имя приложения
         private string spreadSheetsId; // айди таблицы
