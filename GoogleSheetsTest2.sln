@@ -6,9 +6,6 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GoogleSheetsTest2", "GoogleSheetsTest2\GoogleSheetsTest2.csproj", "{E8014899-2FDF-4E5E-ACC4-EF75DEE8E788}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{B964ED0F-06A1-4EB5-9768-BB11AFE08AD2}"
-	ProjectSection(SolutionItems) = preProject
-		..\ProgramForPostgressTest\ProgramForPostgressTest\Program — копия.cs = ..\ProgramForPostgressTest\ProgramForPostgressTest\Program — копия.cs
-	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
